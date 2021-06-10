@@ -1,8 +1,8 @@
-Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq perm fingroup.
-Require Import ssralg path fintype finfun poly polydiv bigop matrix zmodp.
-Require Import mxtens similar ssrcomplements mxstructure tuple.
-Require Import minor binetcauchy smith.
-Require Import dvdring polydvd. 
+From mathcomp Require Import all_ssreflect.
+From mathcomp Require Import all_algebra.
+From mathcomp Require Import all_real_closed.
+From CoqEAL Require Import binetcauchy ssrcomplements mxstructure minor.
+From CoqEAL Require Import smith dvdring polydvd.
 
 (**    This file is a complement of the file Smith.v of the CoqEAL library.
        We prove here the unicity of the Smith normal form of a matrix.
@@ -28,7 +28,7 @@ Section Specification.
 
 Local Open Scope ring_scope.
 Import GRing.Theory.
-Variable E : euclidRingType. 
+Variable E : euclidDomainType.
 
 About Smith.
 

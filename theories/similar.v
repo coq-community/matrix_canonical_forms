@@ -1,7 +1,7 @@
-Require Import ssreflect ssrfun ssrbool eqtype fintype finfun ssrnat seq.
-Require Import choice ssralg poly polydiv mxpoly matrix bigop.
-Require Import mxalgebra perm fingroup tuple.
-Require Import mxstructure ssrcomplements dvdring.
+From mathcomp Require Import all_ssreflect.
+From mathcomp Require Import all_algebra.
+From mathcomp Require Import all_fingroup.
+From CoqEAL Require Import mxstructure ssrcomplements dvdring.
  
 (**   This file contains the definitions of similarity and equivalence
       between two matrices, and the proofs of some properties about
@@ -74,7 +74,7 @@ Lemma similar_diag_mx_seq m n s1 s2 :
 similar (diag_mx_seq m m s1) (diag_mx_seq n n s2).
 Proof.
 move=> eq Hms Hp.
-have Hs12:= (perm_eq_size Hp).
+have Hs12:= (perm_size Hp).
 have Hs2: size s2 == n by  rewrite -Hs12 Hms eq.
 pose t:= Tuple Hs2.
 have HE: s2 = t by [].
@@ -166,7 +166,7 @@ Qed.
 
 Lemma similar_diag_block : forall l1 l2, size l1 = size l2 ->
    forall (F1 F2 : forall n : nat, nat -> 'M[R]_n.+1),
-   (forall i, i < size l1 ->
+   (forall i, (i < size l1)%N ->
     similar (F1 (nth 0%N l1 i) i) (F2 (nth 0%N l2 i) i)) ->
    similar (diag_block_mx l1 F1) (diag_block_mx l2 F2).
 Proof.
@@ -296,7 +296,7 @@ Proof. by split; case: m3 / eqm A; case: n3 / eqn B. Qed.
  
 Lemma equiv_diag_block : forall l1 l2, size l1 = size l2 ->
    forall (F1 F2 : forall n : nat, nat -> 'M_n.+1),
-   (forall i, i < size l1->
+   (forall i, (i < size l1)%N ->
     equivalent (F1 (nth 0%N l1 i) i) (F2 (nth 0%N l2 i) i)) ->
    equivalent (diag_block_mx l1 F1) (diag_block_mx l2 F2).
 Proof.
@@ -373,12 +373,12 @@ have {H}H: M0 * ('X - A%:P) * N0 = (1 - ('X - B%:P) * R1) * ('X - B%:P).
   rewrite divrr // mulVr // !rmorph1 !mulr1 opprB addrA.
   rewrite -{1}[_ + _ - B%:P]addrA subrK (addrC (M0 * _ * _)) addrK.
   by rewrite opprD opprK addrA addrN add0r.
-have HM0: size M0 <= 1.
+have HM0: (size M0 <= 1)%N.
   by rewrite -ltnS -(size_XsubC B) ltn_rmodp_l polyXsubC_eq0.
-have HN0 : size N0 <= 1.
+have HN0 : (size N0 <= 1)%N.
   by rewrite -ltnS -(size_XsubC B) ltn_rmodp polyXsubC_eq0.
 case HR1:(R1 == 0); last first.
-  have: size ((1 - ('X - B%:P) * R1) * ('X - B%:P)) <= 2.
+  have: (size ((1 - ('X - B%:P) * R1) * ('X - B%:P))%R <= 2)%N.
     rewrite -H; apply:(leq_trans (size_mul_leq _ _)).
     rewrite (size1_polyC HN0) size_polyC -subn1 leq_subLR addnC.
     apply/(leq_add (leq_b1 _))/(leq_trans (size_mul_leq _ _)).

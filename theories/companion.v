@@ -1,7 +1,6 @@
-Require Import ssreflect ssrfun ssrbool eqtype ssrnat div seq.
-Require Import ssralg fintype perm mxpoly poly polydiv.
-Require Import matrix bigop zmodp tuple. 
-Require Import ssrcomplements mxstructure.
+From mathcomp Require Import all_ssreflect.
+From mathcomp Require Import all_algebra.
+From CoqEAL Require Import ssrcomplements mxstructure.
 
 (**  This file defines companion matrices for any non-constant polynomial and
   prooves the properties of their characteristic and minimal polynomials
@@ -29,7 +28,7 @@ Definition companion_mxn n (p : {poly R}) :=
 Definition companion_mx (p : {poly R}) := companion_mxn (size p).-2.+1 p.
 
 Lemma comp_char_polyK : forall (p : {poly R}), p \is monic -> 
-  1 < size p -> char_poly (companion_mx p) = p.  
+  (1 < size p)%N -> char_poly (companion_mx p) = p.
 Proof.
 apply: poly_ind=> [|p c IHp]; first by move/monic_neq0/eqP.
 case: (p == 0) /eqP => [-> H |/eqP H Hm Hs].
@@ -88,11 +87,12 @@ Local Open Scope ring_scope.
 Import GRing.Theory.
 
 Lemma comp_mxminpolyK :  forall (p : {poly F}), p \is monic ->
-  1 < size p -> mxminpoly (companion_mx p) = p.
+  (1 < size p)%N -> mxminpoly (companion_mx p) = p.
 Proof.
 move=> p Hp Hs.
 set A := companion_mx p.
-suff Hn: forall q, horner_mx A q = 0 -> (q == 0) || ((size p).-2 < (size q).-1).
+suff Hn: forall q, horner_mx A q = 0 ->
+    (q == 0) || ((size p).-2 < (size q).-1)%N.
   have Hm0: (mxminpoly A == 0) = false.
     by apply: negbTE; rewrite monic_neq0 // mxminpoly_monic.
   have:= (Hn (mxminpoly A) (mx_root_minpoly A)); rewrite Hm0 /= => Hmn.
@@ -111,15 +111,15 @@ have H2: forall i : 'I_(size p).-2.+1, (A ^+ i) *m col ord0 1%:M = col i 1%:M.
   case; elim=> [Hi|i IH Hi] /=. 
     by rewrite expr0 mul1mx; congr col; apply: ord_inj. 
   rewrite exprS -mulmxA (IH (ltnW Hi)).
-  have Ho: i <  (size p).-2 by rewrite -ltnS.
+  have Ho: (i <  (size p).-2)%N by rewrite -ltnS.
   have ->: (Ordinal (ltnW Hi)) = (widen_ord (leqnSn (size p).-2) (Ordinal Ho)).
     by apply: ord_inj.
   by rewrite H; congr col; apply: ord_inj; rewrite lift0.
 case Hq: (q == 0)=> //.
-have Hsq: 0 < size q by rewrite size_poly_gt0 Hq.
+have Hsq: (0 < size q)%N by rewrite size_poly_gt0 Hq.
 rewrite /horner_mx /horner_morph horner_coef. 
 rewrite size_map_poly_id0 ?fmorph_eq0 ?lead_coef_eq0 ?Hq // => H1 Hb.
-have Hw: size q <= (size p).-2.+1 by rewrite -(prednK Hsq).
+have Hw: (size q <= (size p).-2.+1)%N by rewrite -(prednK Hsq).
 suff : q == 0 by rewrite Hq.
 have: \sum_(i < size q) q`_i *: (A ^+ i *m col ord0 1%:M) = 0.
   rewrite (eq_bigr (fun i : 'I_(size q) => 

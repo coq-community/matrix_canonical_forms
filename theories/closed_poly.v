@@ -1,6 +1,7 @@
-Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq choice bigop.
-Require Import ssralg poly polydiv polyorder fintype.
-Require Import ssrcomplements. 
+From mathcomp Require Import all_ssreflect.
+From mathcomp Require Import all_algebra.
+From mathcomp Require Import all_real_closed.
+From CoqEAL Require Import ssrcomplements.
 
 (******************************************************************************)
 (*                                                                            *)
@@ -113,7 +114,8 @@ rewrite (big_nth 0) big_mkord size_prod.
 by move=> i _; rewrite polyXsubC_eq0.
 Qed.
 
-Lemma root_seq_nil (p : {poly F}) : (size p <= 1) = ((root_seq p) == [::]). 
+Lemma root_seq_nil (p : {poly F}) :
+  (size p <= 1)%N = ((root_seq p) == [::]).
 Proof. by rewrite -subn_eq0 subn1 -size_root_seq size_eq0. Qed.
 
 Lemma sub_root_div (p q : {poly F}) (Hq : q != 0) : 
@@ -166,11 +168,11 @@ Qed.
 
 Definition root_mu_seq p := [seq (x,(\mu_x p)) | x <- (root_seq_uniq p)].
 
-Lemma root_mu_seq_pos x p : p != 0 -> x \in root_mu_seq p -> 0 < x.2.  
+Lemma root_mu_seq_pos x p : p != 0 -> x \in root_mu_seq p -> (0 < x.2)%N.
 Proof.
 move=> Hp H.
 have Hr: size (root_seq_uniq p) = size (root_mu_seq p) by rewrite size_map.
-have Hs: index x (root_mu_seq p) < size (root_seq_uniq p).
+have Hs: (index x (root_mu_seq p) < size (root_seq_uniq p))%N.
   by rewrite Hr index_mem.
 rewrite -(nth_index (0,0%N) H) // (nth_map 0) // mu_gt0 //. 
 by rewrite -root_root_seq // -mem_undup mem_nth.
@@ -179,7 +181,7 @@ Qed.
 Definition root_seq_poly (s : seq {poly F}) := flatten (map root_mu_seq s).
 
 Lemma root_seq_poly_pos x s : (forall p , p \in s -> p !=0) -> 
-  x \in root_seq_poly s -> 0 < x.2.
+  x \in root_seq_poly s -> (0 < x.2)%N.
 Proof.
 elim : s=> [|p l IHl H]; first by rewrite in_nil.
 rewrite mem_cat.
@@ -199,7 +201,7 @@ by rewrite -index_mem size_map in Hq.
 Qed.
 
 Lemma size_linear_factor_leq1 p : forall q, q \in linear_factor_seq p ->
-  1 < size q.
+  (1 < size q)%N.
 Proof.
 move=> q; case: (altP (@eqP _ p 0))=> [Hp|Hp Hq].
   rewrite Hp /linear_factor_seq /root_mu_seq.
@@ -252,7 +254,7 @@ Qed.
 Lemma uniq_root_mu_seq (p : {poly F}) : uniq (root_seq p) -> 
   forall x, x \in root_mu_seq p -> x.2 = 1%N.
 Proof.
-move=> H x /(nthP (0,0%N)) [i]; rewrite size_map=> Hi.
+move=> H x /(nthP (0,0%N)) [] i; rewrite size_map=> Hi.
 rewrite (nth_map 0) // => <- /=; move: Hi.
 rewrite /root_seq_uniq undup_id // -count_root_seq => Hi.
 by rewrite count_uniq_mem // (mem_nth 0 Hi).
@@ -264,10 +266,10 @@ Proof.
 move=> Hq Hq2 Hpq.
 apply: count_mem_uniq=> x.
 have Hc:= (count_uniq_mem x Hq2).
-have Hle: count (pred1 x) (root_seq p) <= count (pred1 x) (root_seq q).
+have Hle: (count (pred1 x) (root_seq p) <= count (pred1 x) (root_seq q))%N.
   rewrite !count_root_seq; case/dvdpP: Hpq => r Hr.
   by rewrite Hr mu_mul -?Hr // leq_addl.
-have: count (pred1 x) (root_seq p) <= 1.
+have: (count (pred1 x) (root_seq p) <= 1)%N.
   by rewrite (leq_trans Hle) // Hc; case: (x \in root_seq q). 
 rewrite leq_eqVlt ltnS leqn0.
 case Hp: (x \in root_seq p).
