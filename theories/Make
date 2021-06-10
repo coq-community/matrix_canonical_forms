@@ -1,0 +1,8 @@
+jordan.v
+frobenius_form.v
+smith_complements.v
+similar.v
+companion.v
+closed_poly.v
+
+OTHERFLAGS = "$(OPTCNF) $(OPTSSR) $(OPTCQL) -dont-load-proofs"
