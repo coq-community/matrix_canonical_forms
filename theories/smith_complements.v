@@ -3,6 +3,7 @@ From mathcomp Require Import all_algebra.
 From mathcomp Require Import all_real_closed.
 From CoqEAL Require Import binetcauchy ssrcomplements mxstructure minor.
 From CoqEAL Require Import smith dvdring polydvd.
+Require Import similar.
 
 (**    This file is a complement of the file Smith.v of the CoqEAL library.
        We prove here the unicity of the Smith normal form of a matrix.
@@ -30,10 +31,31 @@ Local Open Scope ring_scope.
 Import GRing.Theory.
 Variable E : euclidDomainType.
 
-About Smith.
+Definition find1 m n (A : 'M[E]_(m.+1, n.+1)) (v : E) : option 'I_m :=
+  pick [pred i | ~~(v %| A (lift 0 i) 0)].
+
+Lemma find1P m n (A : 'M[E]_(m.+1, n.+1)) (v : E) :
+  pick_spec [pred i | ~~(v %| A (lift 0 i) 0)] (find1 A v).
+Proof. exact: pickP. Qed.
+
+Definition find2 m n (A : 'M[E]_(m.+1, n.+1)) (v : E) :
+    option ('I_m.+1 * 'I_n) :=
+  pick [pred ij | ~~(v %| A ij.1 (lift 0 ij.2))] .
+
+Lemma find2P m n (A : 'M[E]_(m.+1, n.+1)) v :
+  pick_spec [pred ij | ~~(v %| A ij.1 (lift 0 ij.2))] (find2 A v).
+Proof.  exact: pickP. Qed.
+
+Definition find_pivot m n (A : 'M[E]_(m.+1, n.+1)) :
+   option ('I_m.+1 * 'I_n.+1) :=
+  pick [pred ij | A ij.1 ij.2 != 0].
+
+Lemma find_pivotP m n (A : 'M[E]_(m.+1, n.+1)) :
+  pick_spec [pred ij | A ij.1 ij.2 != 0] (find_pivot A).
+Proof. exact: pickP. Qed.
 
 Definition Smith_seq n m (M: 'M[E]_(n,m)) :=
-   let: (L,d,R) := (Smith _ M) in 
+   let: (L,d,R) := (Smith find1 find2 find_pivot M) in
   if d is a :: d' then (\det L)^-1 * (\det R)^-1 *a :: d' else nil. 
 
 Definition Smith_form n m (M: 'M[E]_(n,m)) :=
@@ -44,7 +66,7 @@ Proof.
 case: n m M=>[m M|n]; first exact: equiv0l.
 case=>[M|m M]; first exact: equiv0r.
 rewrite /Smith_form /Smith_seq.
-case: SmithP => L0 d R0 H _ HL0 HR0; split=> //.
+case: (SmithP find1P find2P find_pivotP) => L0 d R0 H _ HL0 HR0; split=> //.
 exists ((@block_mx _ 1 _ 1 _ ((\det L0)^-1 / \det R0)%:M 0 0 1%:M) *m L0).
 exists R0; split=> //.
   rewrite unitmxE detM unitrM (@det_lblock _ 1 n) det_scalar1 det1 mulr1.
@@ -58,7 +80,8 @@ Qed.
 Lemma sorted_Smith n m (M: 'M[E]_(n,m)): 
   sorted (@dvdr E) (Smith_seq M).
 Proof. 
-rewrite /Smith_seq; case: SmithP=> L0 d R0 _ H HL0 HR0.
+rewrite /Smith_seq.
+case: (SmithP find1P find2P find_pivotP) => L0 d R0 _ H HL0 HR0.
 case: d H=> // a l /= H.
 have/allP Ha: all (%|%R a) l by exact: (order_path_min (@dvdr_trans _)). 
 rewrite path_min_sorted=> [|x Hx]; first exact: (path_sorted H).
