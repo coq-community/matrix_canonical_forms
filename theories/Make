@@ -1,3 +1,4 @@
+-R . canonical_forms
 perm_eq_image.v
 jordan.v
 frobenius_form.v
