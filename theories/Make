@@ -1,3 +1,4 @@
+perm_eq_image.v
 jordan.v
 frobenius_form.v
 smith_complements.v
