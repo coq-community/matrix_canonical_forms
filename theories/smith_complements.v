@@ -1,9 +1,10 @@
 From mathcomp Require Import all_ssreflect.
 From mathcomp Require Import all_algebra.
+From mathcomp Require Import all_fingroup.
 From mathcomp Require Import all_real_closed.
 From CoqEAL Require Import binetcauchy ssrcomplements mxstructure minor.
 From CoqEAL Require Import smith dvdring polydvd.
-Require Import similar.
+Require Import similar perm_eq_image.
 
 (**    This file is a complement of the file Smith.v of the CoqEAL library.
        We prove here the unicity of the Smith normal form of a matrix.
@@ -18,7 +19,8 @@ Require Import similar.
              Smith_seq M == The sequence s of the triple (L,s,R).
             Smith_form M == diag_mx_seq m n (Smith_seq M).
 
-                                                                              *)
+
+*)
 
 
 Set Implicit Arguments.
@@ -47,7 +49,7 @@ Lemma find2P m n (A : 'M[E]_(m.+1, n.+1)) v :
 Proof.  exact: pickP. Qed.
 
 Definition find_pivot m n (A : 'M[E]_(m.+1, n.+1)) :
-   option ('I_m.+1 * 'I_n.+1) :=
+    option ('I_m.+1 * 'I_n.+1) :=
   pick [pred ij | A ij.1 ij.2 != 0].
 
 Lemma find_pivotP m n (A : 'M[E]_(m.+1, n.+1)) :
@@ -55,11 +57,11 @@ Lemma find_pivotP m n (A : 'M[E]_(m.+1, n.+1)) :
 Proof. exact: pickP. Qed.
 
 Definition Smith_seq n m (M: 'M[E]_(n,m)) :=
-   let: (L,d,R) := (Smith find1 find2 find_pivot M) in
-  if d is a :: d' then (\det L)^-1 * (\det R)^-1 *a :: d' else nil. 
+  let: (L,d,R) := (Smith find1 find2 find_pivot M) in
+  if d is a :: d' then (\det L)^-1 * (\det R)^-1 *a :: d' else nil.
 
 Definition Smith_form n m (M: 'M[E]_(n,m)) :=
-   diag_mx_seq n m (Smith_seq M).
+  diag_mx_seq n m (Smith_seq M).
 
 Lemma equiv_Smith n m (M: 'M[E]_(n,m)) : equivalent M (Smith_form M).
 Proof.
@@ -84,7 +86,7 @@ rewrite /Smith_seq.
 case: (SmithP find1P find2P find_pivotP) => L0 d R0 _ H HL0 HR0.
 case: d H=> // a l /= H.
 have/allP Ha: all (%|%R a) l by exact: (order_path_min (@dvdr_trans _)). 
-rewrite path_min_sorted=> [|x Hx]; first exact: (path_sorted H).
+rewrite path_min_sorted; [exact: (path_sorted H) | apply/allP=> x Hx].
 apply/(dvdr_trans _ (Ha x Hx))/dvdrP; exists (\det R0 * \det L0). 
 by rewrite -invrM ?mulVKr // unitrM -!unitmxE HR0.
 Qed.
@@ -93,7 +95,7 @@ Lemma det_Smith n (M: 'M[E]_n) : \det (Smith_form M) = \det M.
 Proof.
 rewrite /Smith_form /Smith_seq.
 case: n M=>[M|n M]; first by rewrite !det_mx00.
-case: SmithP=> L0 d R0 H _ HL0 HR0.
+case: (SmithP find1P find2P find_pivotP)=> L0 d R0 H _ HL0 HR0.
 case: d H=>[|a l].
   rewrite !diag_mx_seq_nil -{1}(mul0mx _ R0)=> /(mulIr HR0).
   by rewrite -{1}(mulmx0 _ L0)=> /(mulrI HL0)=> ->.
@@ -105,7 +107,7 @@ by rewrite unitrM -!unitmxE HR0.
 Qed.
 
 Lemma size_Smith_seq n (M: 'M[E]_n) : 
-  \det M != 0 -> size (take n (Smith_seq M)) = n.
+\det M != 0 -> size (take n (Smith_seq M)) = n.
 Proof.
 move/negbTE=> HdM0; rewrite size_take; case: ifP=> //.
 move/negbT; rewrite -leqNgt leq_eqVlt; case/orP=> [/eqP -> //|].
@@ -122,31 +124,31 @@ Section Preunicity.
 Import GRing.Theory.
 Import PolyPriField.
 
-Variable E : euclidRingType.
+Variable E : euclidDomainType.
 Variables (s : seq E) (m n k : nat) (A : 'M[E]_(m,n)). 
 
-Hypothesis (Hk : k <= minn m n) (Hs: sorted %|%R s).
+Hypothesis (Hk : (k <= minn m n)%N) (Hs: sorted %|%R s).
 Hypothesis (HAs : equivalent A (diag_mx_seq m n s)).
 
 Let widen_minl i := widen_ord (geq_minl m n) i.
 Let widen_minr i := widen_ord (geq_minr m n) i.
- 
+
 Lemma minor_diag_mx_seq :
   let l := minn m n in 
   forall (f g : 'I_k -> 'I_l),
   let f' i := widen_minl (f i) in
-  let g' i := widen_minr (g i) in  
-  injective f -> injective g -> {subset codom f <= codom g} -> 
-  minor k f' g' (diag_mx_seq m n s) %= \prod_i s`_(f i).
+  let g' i := widen_minr (g i) in
+  injective f -> injective g -> {subset codom f <= codom g} ->
+  minor f' g' (diag_mx_seq m n s) %= \prod_i s`_(f i).
 Proof.
 rewrite /minor.
 elim: k=>[f g|j IHj f g Hf Hg Hfg]; first by rewrite det_mx00 big_ord0.
 have := perm_eq_image Hf Hg Hfg.
 have Ht : size (codom g) == j.+1 by rewrite size_codom card_ord.
 have -> : image g (ordinal_finType j.+1) = Tuple Ht by [].
-case/tuple_perm_eqP=> p Hp .
+case/tuple_permP=> p Hp.
 have Hfg0 i : g (p i) = f i.
-  have He: i < #|'I_j.+1| by rewrite card_ord.
+  have He: (i < #|'I_j.+1|)%N by rewrite card_ord.
   have {2}->: i = enum_val (Ordinal He) by rewrite enum_val_ord; apply: ord_inj.
   rewrite -(nth_image (f ord0)) Hp -tnth_nth tnth_mktuple (tnth_nth (f ord0)).
   by rewrite /= codomE (nth_map ord0) ?nth_ord_enum // size_enum_ord.
@@ -344,7 +346,7 @@ Section Unicity.
 
 Import GRing.Theory.
 Import PolyPriField.
-Variable E : euclidRingType.
+Variable E : euclidDomainType.
 
 Lemma Smith_unicity n (A : 'M[E]_n) (s : seq E) :
   sorted %|%R s -> equivalent A (diag_mx_seq n n s) ->
