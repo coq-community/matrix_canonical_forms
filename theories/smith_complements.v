@@ -4,7 +4,7 @@ From mathcomp Require Import all_fingroup.
 From mathcomp Require Import all_real_closed.
 From CoqEAL Require Import binetcauchy ssrcomplements mxstructure minor.
 From CoqEAL Require Import smith dvdring polydvd.
-Require Import similar perm_eq_image.
+Require Import canonical_forms.similar perm_eq_image.
 
 (**    This file is a complement of the file Smith.v of the CoqEAL library.
        We prove here the unicity of the Smith normal form of a matrix.
@@ -29,8 +29,8 @@ Unset Printing Implicit Defensive.
 
 Section Specification.
 
-Local Open Scope ring_scope.
 Import GRing.Theory.
+Local Open Scope ring_scope.
 Variable E : euclidDomainType.
 
 Definition find1 m n (A : 'M[E]_(m.+1, n.+1)) (v : E) : option 'I_m :=
@@ -184,7 +184,7 @@ Qed.
 
 Lemma prod_minor_seq : 
   \prod_(i < k) s`_i  = 
-   minor k [ffun x : 'I_k => widen_minl (widen_ord Hk x)] 
+   minor [ffun x : 'I_k => widen_minl (widen_ord Hk x)]
    [ffun x : 'I_k => widen_minr (widen_ord Hk x)] (diag_mx_seq m n s). 
 Proof.
 rewrite /minor /submatrix.
@@ -208,8 +208,8 @@ by rewrite eqn_leq leqNgt (ltn_ord i) andFb mul0r.
 Qed.
 
 Lemma minor_eq0l (R : comRingType) k1 m1 n1  (s1 : seq R) x :
-  forall (f : 'I_k1 -> 'I_m1) g, n1 <= f x -> 
-  minor k1 f g (diag_mx_seq m1 n1 s1) = 0.
+  forall (f : 'I_k1 -> 'I_m1) g, (n1 <= f x)%N ->
+  minor f g (diag_mx_seq m1 n1 s1) = 0.
 Proof.
 move=> f g H.
 rewrite /minor (expand_det_row _ x) big1 // => i _.
@@ -217,8 +217,8 @@ by rewrite !mxE gtn_eqF ?mul0r // (leq_trans _ H).
 Qed.
 
 Lemma minor_eq0r (R : comRingType) k1 m1 n1  (s1 : seq R) x :
-  forall f (g : 'I_k1 -> 'I_n1) , m1 <= g x -> 
-  minor k1 f g (diag_mx_seq m1 n1 s1) = 0.
+  forall f (g : 'I_k1 -> 'I_n1) , (m1 <= g x)%N ->
+  minor f g (diag_mx_seq m1 n1 s1) = 0.
 Proof.
 move=> f g H.
 rewrite /minor (expand_det_col _ x) big1 // => i _.
@@ -228,23 +228,23 @@ Qed.
 Lemma eqd_seq_gcdr : 
   \prod_(i < k) s`_i %= 
   \big[(@gcdr E)/0]_(f : {ffun 'I_k -> 'I_m}) 
-  (\big[(@gcdr E)/0]_(g : {ffun 'I_k -> 'I_n}) minor k f g (diag_mx_seq m n s)).
+  (\big[(@gcdr E)/0]_(g : {ffun 'I_k -> 'I_n}) minor f g (diag_mx_seq m n s)).
 Proof.
 apply/andP; split; last first.
   rewrite prod_minor_seq; set j := [ffun _ => _].
   by apply/(dvdr_trans (big_dvdr_gcdr _ j))/big_dvdr_gcdr. 
 apply: big_gcdrP=> f; apply: big_gcdrP=> g.
 case: (injectiveb f) /injectiveP=> Hinjf; last first.
-  by rewrite (minor_f_not_injective _ _ Hinjf) dvdr0.   
+  by rewrite (minor_f_not_injective _ _ Hinjf) dvdr0.
 case: (injectiveb g) /injectiveP=> Hinjg; last first.
   by rewrite (minor_g_not_injective _ _ Hinjg) dvdr0.   
-have Hmin k1 i m1 n1 (h : 'I_k1 -> 'I_m1) : minn m1 n1 <= h i -> n1 <= h i. 
+have Hmin k1 i m1 n1 (h : 'I_k1 -> 'I_m1) : (minn m1 n1 <= h i -> n1 <= h i)%N.
   move=> Hhi; have := (leq_ltn_trans Hhi (ltn_ord (h i))).
   by rewrite gtn_min ltnn=> /ltnW/minn_idPr <-.
-case: (altP (@forallP _ (fun i => f i < minn m n)))=>[Hwf|]; last first.
+case: (altP (@forallP _ (fun i => f i < minn m n)%N))=>[Hwf|]; last first.
   rewrite negb_forall=> /existsP [x]; rewrite -leqNgt=> /Hmin Hx.
   by rewrite (minor_eq0l _ _ Hx) dvdr0.
-case: (altP (@forallP _ (fun i => g i < minn m n)))=>[Hwg|]; last first.
+case: (altP (@forallP _ (fun i => g i < minn m n)%N))=>[Hwg|]; last first.
   rewrite negb_forall=> /existsP [x]; rewrite -leqNgt minnC=> /Hmin Hx.
   by rewrite (minor_eq0r _ _ Hx) dvdr0.
 pose f1 i := Ordinal (Hwf i).
@@ -264,8 +264,8 @@ case Hcfg: (codom f1 \subset codom g1); last first.
 move/subsetP: Hcfg=> Hcfg.
 pose f' i := widen_minl (f1 i).
 pose g' i := widen_minr (g1 i).
-have ->: minor k f g (diag_mx_seq m n s) =
-           minor k f' g' (diag_mx_seq m n s).
+have ->: minor f g (diag_mx_seq m n s) =
+           minor f' g' (diag_mx_seq m n s).
   by apply: minor_eq=> i; apply: ord_inj.
 rewrite (eqd_dvdr _ (minor_diag_mx_seq Hinjf1 Hinjg1 Hcfg)) //. 
 move: Hinjf1; clear -Hs; move: f1; clear -Hs.
@@ -288,29 +288,34 @@ rewrite (reindex_inj (@perm_inj _ p)) /= big_ord_recr /= dvdr_mul //.
   have ->: C = \prod_i s`_([ffun x => f x] i).   
     by apply: eq_bigr=> i _; rewrite ffunE.   
   by apply.
-apply: sorted_nthr=> [||x _||].
- +exact: dvdrr.
- +exact: dvdr_trans.
- +exact: dvdr0.
- +exact: Hs. 
-rewrite /= tpermR; case/orP: (leq_total j (g l))=> //.
-rewrite leq_eqVlt; case/orP=> [|Hgm]; first by move/eqP=> ->; rewrite leqnn.
-have Habs: forall i, g i < j.
-  move=> i; apply: (leq_ltn_trans _ Hgm).
-  by rewrite -Hl /k; exact: (leq_bigmax i).
-pose f := fun x => Ordinal (Habs x).
-have Hf: injective f.
-  move=> x y /eqP; rewrite -(inj_eq (@ord_inj _)) /= => /eqP Hxy.
-  by apply/Hg/ord_inj.
-have: #|'I_j.+1| <= #|'I_j|.
-  by rewrite -(card_codom Hf); exact: max_card.
-by rewrite !card_ord ltnn.
+have jleg : (j <= g (p ord_max))%N.
+  rewrite /= tpermR; case/orP: (leq_total j (g l))=> //.
+  rewrite leq_eqVlt; case/orP=> [|Hgm]; first by move/eqP=> ->; rewrite leqnn.
+  have Habs: forall i, (g i < j)%N.
+    move=> i; apply: (leq_ltn_trans _ Hgm).
+    by rewrite -Hl /k; exact: (leq_bigmax i).
+  pose f := fun x => Ordinal (Habs x).
+  have Hf: injective f.
+    move=> x y /eqP; rewrite -(inj_eq (@ord_inj _)) /= => /eqP Hxy.
+    by apply/Hg/ord_inj.
+  have: (#|'I_j.+1| <= #|'I_j|)%N.
+    by rewrite -(card_codom Hf); exact: max_card.
+  by rewrite !card_ord ltnn.
+have [glts | ] := boolP (g (p ord_max) < size s)%N; last first.
+  by rewrite -leqNgt => it; rewrite (nth_default 0 it) dvdr0.
+apply: sorted_leq_nth.
+ + exact: dvdr_trans.
+ + exact: dvdrr.
+ + exact: Hs.
+ + by rewrite inE (leq_ltn_trans _ glts).
+ + by rewrite inE.
+ + by [].
 Qed.
 
 Lemma Smith_gcdr_spec : 
   \prod_(i < k) s`_i  %= 
   \big[(@gcdr E)/0]_(f : {ffun 'I_k -> 'I_m}) 
-   (\big[(@gcdr E)/0]_(g : {ffun 'I_k -> 'I_n}) minor k f g A) .
+   (\big[(@gcdr E)/0]_(g : {ffun 'I_k -> 'I_n}) minor f g A) .
 Proof.
 rewrite (eqd_ltrans eqd_seq_gcdr).
 have [ _ _ [M [N [_ _ Heqs]]]]:= HAs.
@@ -321,17 +326,17 @@ have HdivmA p q k1 (B C : 'M[E]_(p,q)) (M1 : 'M_p) (N1 : 'M_q) :
    forall (H : M1 *m C *m N1 = B),
    forall (f : 'I_k1 -> 'I_p) (g : 'I_k1 -> 'I_q),
    \big[(@gcdr E)/0]_(f0 : {ffun 'I_k1 -> _}) 
-    \big[(@gcdr E)/0]_(g0 : {ffun 'I_k1 -> _}) minor k1 f0 g0 C
-    %| minor k1 f g B.
+    \big[(@gcdr E)/0]_(g0 : {ffun 'I_k1 -> _}) minor f0 g0 C
+    %| minor f g B.
   move=> H f g. 
-  have HBC: minor k1 f g B =  \sum_(f0 : {ffun _ -> _ } | strictf f0)
+  have HBC: minor f g B =  \sum_(f0 : {ffun _ -> _ } | strictf f0)
                  ((\sum_(g0 : {ffun _ -> _ } | strictf g0)
-                  (minor k1 id g0 (submatrix f id M1) * minor k1 g0 f0 C)) *
-                   minor k1 f0 id (submatrix id g N1)).
+                  (minor id g0 (submatrix f id M1) * minor g0 f0 C)) *
+                   minor f0 id (submatrix id g N1)).
     rewrite -H /minor submatrix_mul BinetCauchy.
     apply: eq_bigr=> i _; congr GRing.mul; rewrite /minor.
-    rewrite sub_submx submatrix_mul BinetCauchy.
-    by apply: eq_bigr=> j _; rewrite /minor !sub_submx.
+    rewrite sub_submatrix submatrix_mul BinetCauchy.
+    by apply: eq_bigr=> j _; rewrite /minor !sub_submatrix.
   rewrite HBC; apply: big_dvdr=> h; rewrite dvdr_mulr //.
   apply: big_dvdr=> j; rewrite dvdr_mull //.
   by apply: (dvdr_trans (big_dvdr_gcdr _ j)); apply: big_dvdr_gcdr. 
@@ -350,7 +355,7 @@ Variable E : euclidDomainType.
 
 Lemma Smith_unicity n (A : 'M[E]_n) (s : seq E) :
   sorted %|%R s -> equivalent A (diag_mx_seq n n s) ->
-  forall i, i < n -> s`_i %= (Smith_seq A)`_i.
+  forall i, (i < n)%N -> s`_i %= (Smith_seq A)`_i.
 Proof.
 move=> Hs HAs i. 
 have Hsmt := sorted_Smith A.
@@ -371,22 +376,28 @@ have H1: \prod_(i < j) s`_i %= \prod_(i < j) (Smith_seq A)`_i.
   apply: eqd_big_mul=> k _; apply: IHi.
     exact: (leq_trans (ltn_ord k) Hji).
   exact: (ltn_trans _ Hj).
-case: (altP (\prod_(i < j) s`_i =P 0))=> H0. 
-  have/prodf_eq0 [k _ /eqP Hk]: (\prod_(i < j) (Smith_seq A)`_i == 0).
-    by rewrite H0 eqd0r in H1.
-  case/eqP/prodf_eq0: H0 => l _ /eqP Hl.
-  have/eqP ->: s`_j == 0.
-    rewrite -dvd0r -{1}Hl; apply: sorted_nthr=> // [|x _|].
-     +exact: dvdr_trans.
-     +exact: dvdr0.
-     +exact: ltnW.     
-  have/eqP ->: (Smith_seq A)`_j == 0.
-    rewrite -dvd0r -{1}Hk; apply: sorted_nthr=> // [|x _|].
-     +exact: dvdr_trans.
-     +exact: dvdr0.
-     +exact: ltnW.     
-  by [].
-by rewrite -(eqd_mul2l _ _ H0) (eqd_rtrans (eqd_mulr _ H1)).
+case: (altP (\prod_(i < j) s`_i =P 0))=> H0; last first.
+  by rewrite -(eqd_mul2l _ _ H0) (eqd_rtrans (eqd_mulr _ H1)).
+have/prodf_eq0 [k _ /eqP Hk]: (\prod_(i < j) (Smith_seq A)`_i == 0).
+  by rewrite H0 eqd0r in H1.
+case/eqP/prodf_eq0: H0 => l _ /eqP Hl.
+have sj0 : s`_j == 0.
+  have [ jlts | ] := boolP(j < size s)%N; last first.
+    by rewrite -leqNgt => it; rewrite (nth_default 0 it).
+  rewrite -dvd0r -{1}Hl.
+  apply: sorted_leq_nth => //.
+    + exact: dvdr_trans.
+    + by rewrite inE (ltn_trans _ jlts) //; case: l.
+    + by case: l {Hl}=> l llt /=; rewrite ltnW.
+have smsj0 : (Smith_seq A)`_j == 0.
+  have [ jlts | ] := boolP(j < size (Smith_seq A))%N; last first.
+    by rewrite -leqNgt => it; rewrite (nth_default 0 it).
+  rewrite -dvd0r -{1}Hk.
+  apply: sorted_leq_nth => //.
+    + exact: dvdr_trans.
+    + by rewrite inE (ltn_trans _ jlts) //; case: l.
+    + by case: l {Hl}=> l llt /=; rewrite ltnW.
+by rewrite (eqP sj0) (eqP smsj0).
 Qed.
 
 End Unicity.
