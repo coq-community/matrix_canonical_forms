@@ -3,6 +3,22 @@ Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Section seq_eqType.
+
+Variable T1 : eqType.
+
+Lemma sorted_trans (leT1 leT2 : rel T1) s :
+  {in s &, (forall x y, leT1 x y -> leT2 x y)} ->
+  sorted leT1 s -> sorted leT2 s.
+Proof.
+elim: s=> // a [] //= b l IHl leT12 /andP [leT1ab pleT1].
+rewrite leT12 ?inE ?eqxx ?orbT // IHl // => x y xbcl ybcl leT1xy.
+  by rewrite leT12 // mem_behead.
+Qed.
+
+
+End seq_eqType.
+
 Section FinType.
 
 Lemma enum_ord_enum n : enum 'I_n = ord_enum n.
@@ -53,6 +69,22 @@ rewrite (reindex (lift j)).
 exists (fun k => odflt k0 (unlift j k)) => k; first by rewrite liftK.
 by case/unlift_some=> k' -> ->.
 Qed.
+
+Variable R : idomainType.
+Open Scope ring_scope.
+
+Lemma lead_coef_prod (s : seq {poly R}) :
+  \prod_(p <- s) lead_coef p = lead_coef (\prod_(p <- s) p).
+Proof.
+elim: s=> [|a l IHl]; first by rewrite !big_nil lead_coef1.
+by rewrite !big_cons lead_coefM -IHl.
+Qed.
+
+Import GRing.Theory.
+
+Lemma monic_leadVMp (p : {poly R}) : (lead_coef p) \is a GRing.unit ->
+  ((lead_coef p)^-1 *: p) \is monic.
+Proof. by move=> *; apply/monicP; rewrite lead_coefZ mulVr. Qed.
 
 End BigOp.
 

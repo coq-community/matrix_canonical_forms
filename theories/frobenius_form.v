@@ -1,9 +1,11 @@
-Require Import ssreflect ssrfun ssrbool eqtype ssrnat div seq finfun.
-Require Import ssralg path fintype perm poly fingroup mxpoly polydiv.
-Require Import tuple matrix bigop zmodp mxtens polyorder dvdring.
-Require Import companion similar mxstructure closed_poly.
-Require Import ssrcomplements polydvd smith smith_complements.
- 
+From mathcomp Require Import all_ssreflect.
+From mathcomp Require Import all_algebra.
+From mathcomp Require Import all_fingroup.
+From mathcomp Require Import all_real_closed.
+From CoqEAL Require Import binetcauchy ssrcomplements mxstructure minor.
+From CoqEAL Require Import smith dvdring polydvd.
+Require Import similar perm_eq_image companion closed_poly smith_complements.
+
 (**  This file provides a theory of invariant factors. The main result
      proved here is the similarity between a matrix and its Frobenius
      normal form.
@@ -41,19 +43,22 @@ Lemma sorted_Frobenius_seq n (A : 'M[F]_n) :
   sorted (@dvdp _) (Frobenius_seq A).
 Proof.
 case: n A=> // n A.
-apply: (@sorted_map _ _ (@dvdp _))=>[x y Hxy|].
-  have Hp: forall (p : E), ((lead_coef p)^-1 *: p %= p)%P.
-    move=> p; case Hp0: (p == 0).
-      by rewrite (eqP Hp0) scaler0 eqpxx.
-    apply/eqpP; exists ((lead_coef p),1).
-      by rewrite !lead_coef_eq0 (negbT Hp0) oner_neq0.
-    rewrite scalerA mulrV ?scale1r //.
-    by rewrite unitfE lead_coef_eq0 (negbT Hp0).
-  by rewrite (eqp_dvdl _ (Hp x)) (eqp_dvdr _ (Hp y)).
+have Hp: forall (p : E), ((lead_coef p)^-1 *: p %= p)%P.
+  move=> p; case Hp0: (p == 0).
+    by rewrite (eqP Hp0) scaler0 eqpxx.
+  apply/eqpP; exists ((lead_coef p),1).
+    by rewrite !lead_coef_eq0 (negbT Hp0) oner_neq0.
+  rewrite scalerA mulrV ?scale1r //.
+  by rewrite unitfE lead_coef_eq0 (negbT Hp0).
+suff : sorted (@dvdr _) (Frobenius_seq A).
+  by apply: sorted_trans=> x y _ _; rewrite dvdr_dvdp=> ->.
+have /mono_sorted it
+  : {mono (fun p : {poly F} => (lead_coef p)^-1 *: p) : x y / 
+   x %| y}.
+  by move=> x y; rewrite  !dvdr_dvdp (eqp_dvdl _ (Hp x))  (eqp_dvdr _ (Hp y)).
+rewrite it.
 set s := Smith_seq _.
-have Hdvd: {in s &, forall p q, dvdr p q -> dvdp p q}. 
-  by move=> p q; rewrite /= dvdr_dvdp.
-by apply/sorted_take/(sorted_trans Hdvd)/sorted_Smith.
+apply/(sorted_take (@dvdr_trans _))/sorted_Smith.
 Qed.
 
 Lemma size_Frobenius_seq n (A : 'M[F]_n) : size (Frobenius_seq A) = n.
@@ -64,7 +69,7 @@ Qed.
 Lemma Frobenius_seq_char_poly n (A : 'M[F]_n) :
 \prod_(p <- Frobenius_seq A) p = char_poly A.
 Proof.
-rewrite big_map scaler_prod prodf_inv. 
+rewrite big_map scaler_prod prodfV. 
 have Hs m (B : 'M[F]_m): size (take m (Smith_seq (char_poly_mx B))) = m.
   by move: (size_Frobenius_seq B); rewrite size_map.
 have Hp1: \prod_(i <- (take n (Smith_seq (char_poly_mx A)))) i = char_poly A. 
@@ -93,7 +98,7 @@ Lemma monic_Frobenius_seq n (A : 'M[F]_n) p:
 Proof.
 move=> Hp.
 have := Frobenius_seq_neq0 Hp.
-move: Hp; rewrite /Frobenius_seq=> /(nthP 0) [i].
+move: Hp; rewrite /Frobenius_seq=> /(nthP 0) []i.
 rewrite size_map=> Hi; rewrite (nth_map 0) // => <-.
 rewrite scaler_eq0 negb_or=> /andP [_ H0].
 by apply: monic_leadVMp; rewrite unitfE lead_coef_eq0.
@@ -106,7 +111,7 @@ Proof.
 rewrite -diag_mx_seq_takel.
 apply: eqd_equiv=> // [|i]; first by rewrite size_map.
 set s := take _ _.
-case Hi: (i < (size s)); last first.
+case Hi: (i < (size s))%N; last first.
   by rewrite !nth_default ?eqdd // ?size_map leqNgt Hi.
 rewrite (nth_map 0) //; apply/eqdP.
 exists ((lead_coef s`_i)^-1%:P).
@@ -119,7 +124,7 @@ by rewrite mul_polyC.
 Qed.
 
 Definition invariant_factors n (A : 'M[F]_n) :=
-  filter (fun p : E => 1 < size p) (Frobenius_seq A).
+  filter (fun p : E => (1 < size p)%N) (Frobenius_seq A).
 
 Lemma invariant_factor_neq0 n (A : 'M[F]_n) :
  forall p, p \in invariant_factors A -> p != 0.
