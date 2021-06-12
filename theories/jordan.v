@@ -1,7 +1,11 @@
-Require Import ssreflect ssrfun ssrbool eqtype ssrnat ssralg matrix div zmodp.
-Require Import seq path fintype poly mxpoly mxalgebra bigop binomial polydiv.
-Require Import finfun mxstructure similar companion frobenius_form.
-Require Import ssrcomplements dvdring polydvd smith_complements closed_poly.
+From mathcomp Require Import all_ssreflect.
+From mathcomp Require Import all_algebra.
+From mathcomp Require Import all_fingroup.
+From mathcomp Require Import all_real_closed.
+From CoqEAL Require Import binetcauchy ssrcomplements mxstructure minor.
+From CoqEAL Require Import smith dvdring polydvd.
+Require Import similar perm_eq_image companion closed_poly smith_complements.
+Require Import frobenius_form.
   
 (**  The main result of this file is the theorem of Jordan decomposition.
      A direct consequence of this theorem is the diagonalization theorem.
@@ -73,7 +77,7 @@ rewrite (bigD1 i) //= !mxE big1 ?addr0=>[|l /negbTE Hl].
     by rewrite !bin0 !mul1r !subn0 mulrnAr exprS.
   rewrite !mxE eq_sym [(_ == _ :> nat)]Hl Hi eqn_leq.
   by rewrite ltnNge -ltnS ltn_ord addr0 mul0r.
-have Ho: i.+1 < n.+1 by rewrite ltn_neqAle Hi ltn_ord.
+have Ho: (i.+1 < n.+1)%N by rewrite ltn_neqAle Hi ltn_ord.
 rewrite (bigD1 i) //= (bigD1 (Ordinal Ho)); last first.
   by rewrite -(inj_eq (@ord_inj _)) eqn_leq ltnn.
 rewrite !mxE eqxx (@eq_sym nat_eqType i) !eqn_leq !ltnn addr0 add0r.  
@@ -82,12 +86,12 @@ rewrite !leqnn mul1r subnS /= big1 ?addr0; last first.
   by rewrite !mxE eq_sym [_ == _ :>nat]Hil eq_sym [_ == _ :>nat]Hl addr0 mul0r.
 case: (ltngtP i j)=> Hij; last first.
     (*******************cas i = j***********************************) 
-    by  rewrite Hij leqnn subnn !subn0 addr0 !bin0 !mul1r exprS.
+    by rewrite Hij subnn !subn0 addr0 !bin0 !mul1r exprS.
   (****************** cas j < i ****************************************)
-  by rewrite leqNgt Hij addr0 mulr0.  
+  by rewrite addr0 mulr0.  
 (************* cas    i <= j***************************)
-rewrite ltnW // !mulr1n mulrC -mulrA -exprSr -{2}subn1.
-have H1ij: 1 <= j - i by rewrite subn_gt0. 
+rewrite !mulr1n mulrC -mulrA -exprSr -{2}subn1.
+have H1ij: (1 <= j - i)%N by rewrite subn_gt0. 
 rewrite (subnBA _  H1ij) addn1.
 case: (leqP (j-i) k)=> Hijk.
   by rewrite (subSn Hijk) -mulrDl -{1}(prednK H1ij) -natrD -binS prednK.
@@ -125,7 +129,7 @@ Lemma similar_cj n (lam : R) :
 Proof.
 set p := _^+n.+1.
 have Hmp: p \is monic by rewrite monic_exp // monicXsubC.
-have Hsp: 1 < size p by rewrite size_exp_XsubC.
+have Hsp: (1 < size p)%N by rewrite size_exp_XsubC.
 apply/similar_fundamental.
 apply: (equiv_trans  (equiv_Smith _)).
 apply: (equiv_trans (Smith_companion Hsp Hmp)).
@@ -137,10 +141,11 @@ have Hs1: size s = n.+1.
   rewrite size_Smith_seq // -/(char_poly _) char_poly_Jordan_block.
   by rewrite -size_poly_eq0 size_exp_XsubC.
 apply: eqd_equiv; rewrite ?size_exp_XsubC // ?size_rcons ?size_nseq //.
-have Hsort: sorted (@dvdr _) s by apply/sorted_take/sorted_Smith.   
+have Hsort: sorted (@dvdr _) s.
+  by apply/(sorted_take (@dvdr_trans _))/sorted_Smith.   
 have:= (equiv_Smith M).
 rewrite /Smith_form -diag_mx_seq_takel => Hequiv.
-have Hlemin: n <= minn n.+1 n.+1 by rewrite minnn.
+have Hlemin: (n <= minn n.+1 n.+1)%N by rewrite minnn.
 have:= Smith_gcdr_spec Hlemin Hsort Hequiv.
 set d := \big[_/_]_(_<_) _=> H.
 have {H} H: d %= 1.
@@ -205,14 +210,14 @@ set s1 := flatten _.
 set s2 := map _ _.
 have Hs: size s1 = size s2.
   rewrite /s1 size_map.
-  by do 2! rewrite map_comp -flatten_map size_map.
+  by do 2! rewrite map_comp -map_flatten size_map.
 apply: similar_diag_block=> // i; rewrite /s1.
-(do 2! rewrite map_comp -flatten_map size_map) => Hi.
+(do 2! rewrite map_comp -map_flatten size_map) => Hi.
 rewrite !(nth_map 0) ?size_map //.
 rewrite !(nth_map (0,0%N)) ?size_map //.  
 set x := nth _ _ _.
 rewrite -(@prednK x.2); first exact: similar_cj.
-have/mem_flattenP [s Hx] := (mem_nth (0,0%N) Hi).
+have/flattenP [s Hfs Hx] := (mem_nth (0,0%N) Hi); move: Hfs.
 case/(nthP nil)=> m; rewrite !size_map=> Hm Heq.
 move: Heq Hx; rewrite (nth_map 0) // => <-.
 apply: root_mu_seq_pos.
@@ -235,18 +240,18 @@ Lemma eigen_diag n (A : 'M_n.+1) :
 Proof.
 have Hinj: injective (fun (c : R) => 'X - c%:P).
   by move=> x y /= H; apply/polyC_inj/oppr_inj/(addrI 'X).
-apply: (map_perm_eq Hinj).
+apply: (perm_map_inj Hinj).
 apply: (@unicity_decomposition _ _ _ (char_poly A)).
-  +move=> r /(nthP 0) [i]; rewrite !size_map=> Hi.
+  +move=> r /(nthP 0) []i; rewrite !size_map=> Hi.
    rewrite (nth_map 0) ?size_map // => <-.
    exact: irredp_XsubC.
-  -move=> r /(nthP 0) [i]; rewrite !size_map=> Hi.
+  -move=> r /(nthP 0) []i; rewrite !size_map=> Hi.
    rewrite (nth_map 0) ?size_map // => <-.
    exact: irredp_XsubC.
-  +move=> r /(nthP 0) [i]; rewrite !size_map=> Hi.
+  +move=> r /(nthP 0) []i; rewrite !size_map=> Hi.
    rewrite (nth_map 0) ?size_map // => <-.
    exact: monicXsubC.
-  -move=> r /(nthP 0) [i]; rewrite !size_map=> Hi.
+  -move=> r /(nthP 0) []i; rewrite !size_map=> Hi.
    rewrite (nth_map 0) ?size_map // => <-.
    exact: monicXsubC.
   +by rewrite !big_map; exact: Jordan_char_poly.
@@ -265,20 +270,20 @@ have Hs: size ([seq (Jordan_form A) i i | i <- enum 'I_(size_sum s).+1]) = n.+1.
 have Hn i: nth 0%N s i = 0%N.
   case: (ltnP i (size (root_seq_poly (invariant_factors A))))=> Hi.
     rewrite (nth_map (0,0%N)) //.
-    have/mem_flattenP [s2 Hs2] := (mem_nth (0,0%N) Hi).
+    have/flattenP [s2 Hd Hs2] := (mem_nth (0,0%N) Hi); move: Hd.
     case/(nthP nil)=> m; rewrite !size_map=> Hm Heq2.
     move: Heq2 Hs2; rewrite (nth_map 0) // => <-.
     move=> Hr; rewrite (uniq_root_mu_seq _ Hr) //.
     apply: (uniq_root_dvdp _ H).
       by rewrite monic_neq0 // mxminpoly_monic.
     rewrite -mxminpoly_inv_factors Frobenius_seqE last_cat -nth_last.
-    have Hif: 0 < (size (invariant_factors A)).
+    have Hif: (0 < (size (invariant_factors A)))%N.
       by rewrite lt0n size_eq0 nnil_inv_factors.
     rewrite (set_nth_default 0) ?prednK //.
-    apply: sorted_nth=> //.   
+    apply: sorted_leq_nth=> //.
       -exact: dvdp_trans.
-      +exact: sorted_invf.
-      -by rewrite prednK. 
+      -exact: sorted_invf.
+      -by rewrite inE prednK. 
     by rewrite -ltnS prednK.
   by rewrite nth_default // size_map.
 apply: (similar_trans (Jordan A)). 
@@ -296,11 +301,12 @@ have ->: s2 = s1.
         by rewrite (big_nth 0%N) sum_nat_const_nat subn0 muln1.
       by move=> x /(nthP 0%N) [i Hi]; rewrite Hn=> <-.
     rewrite -size_eq0 size_map size_flatten sumn_big !big_map.
-    have H0: 0 < (size (invariant_factors A)).
+    have H0: (0 < (size (invariant_factors A)))%N.
       by rewrite lt0n size_eq0 nnil_inv_factors.
     rewrite (big_nth 0) big_mkord (bigD1 (Ordinal H0)) //.
-    rewrite size_map -lt0n addn_gt0 lt0n size_eq0 undup_nil.
-    rewrite -root_seq_nil leqNgt.
+    rewrite size_map -lt0n addn_gt0 lt0n size_eq0.
+    apply/orP; left; apply/eqP=>/undup_nil; apply/eqP.
+    rewrite -root_seq_nil -ltnNge.
     have:= (mem_nth 0 H0).
     by rewrite mem_filter; case/andP=> ->.
   move=> i; rewrite size_map size_enum_ord=> Hi.

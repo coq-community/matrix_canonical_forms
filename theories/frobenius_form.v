@@ -186,20 +186,20 @@ have Hst: sorted (@dvdpm F) (nseq m 1 ++ invariant_factors A).
       by rewrite nth0 dvd1pm // nth_nseq Hi monic1.
     rewrite -nth_behead nth_nseq (ltn_trans (ltnSn i) Hi) dvd1pm //.
     by rewrite nth_nseq Hi monic1.
-  rewrite path_min_sorted=> [|p Hp].
-    rewrite sorted_filter //; first exact: dvdpm_trans.
+  rewrite path_min_sorted; [|apply/allP=>p Hp].
+    by rewrite sorted_filter //;first exact: dvdpm_trans.
   rewrite -nth_last nth_nseq size_nseq.
-  by case: (m.-1 < m); rewrite dvd1pm //; apply: (monic_invariant_factors Hp).
+  by case: (m.-1 < m)%N; rewrite dvd1pm //; apply: (monic_invariant_factors Hp).
 apply: (eq_sorted (@dvdpm_trans F) (@dvdpm_asym F) Hfrob Hst).
-pose a:= fun p : E => size p <= 1%N.
-have HaC: {in (Frobenius_seq A), (fun p : E => 1 < size p) =1 (predC a)}.
+pose a:= fun p : E => (size p <= 1)%N.
+have HaC: {in (Frobenius_seq A), (fun p : E => (1 < size p)%N) =1 (predC a)}.
   by move=> p /=; rewrite -ltnNge.
 have Hfi: (invariant_factors A) = filter (predC a) (Frobenius_seq A).
   by rewrite -(eq_in_filter HaC).
 have Hm: m = size (filter a (Frobenius_seq A)).
-  rewrite /m Hfi -!count_filter.
+  rewrite /m Hfi !size_filter.
   apply/eqP; rewrite -(eqn_add2r (count (predC a) (Frobenius_seq A))).
-  by apply/eqP; rewrite subnK ?count_predC ?HfA // -{2}HfA count_size.
+  by apply/eqP; rewrite subnK ?count_predC // -{2}HfA count_size.
 have Hfn: nseq m 1 = filter a (Frobenius_seq A).
   apply: (@eq_from_nth _ 0)=> [|i]; first by rewrite size_nseq.
   rewrite size_nseq => Hi; rewrite nth_nseq Hi.
@@ -208,7 +208,7 @@ have Hfn: nseq m 1 = filter a (Frobenius_seq A).
   rewrite mem_filter=> /andP [Ha1 Ha2].
   have := (monicP (monic_Frobenius_seq Ha2)). 
   by rewrite (size1_polyC Ha1) lead_coefC => ->.
-by rewrite perm_eq_sym Hfn Hfi; apply/perm_eqlP/perm_filterC.
+by rewrite perm_sym Hfn Hfi; apply/permPl/perm_filterC.
 Qed.
 
 Lemma invf_char_poly n (A : 'M[F]_n) : 
@@ -289,17 +289,17 @@ Lemma equiv_sbc_ssc n (A : 'M[F]_n) :
   equivalent (Smith_block_cpmx A) (Smith_seq_cpmx A).
 Proof.
 rewrite /Smith_block_cpmx /Smith_seq_cpmx Frobenius_seqE.
-have: forall p, p \in invariant_factors A -> 0 < (size p).-1.
+have: forall p, p \in invariant_factors A -> (0 < (size p).-1)%N.
   by move=> p; rewrite mem_filter -subn1 subn_gt0=> /andP [].
 rewrite -{10}(sum_size_inv_factors A).
 case: (invariant_factors A)=> [_|a l].
   by rewrite big_nil diag_mx_seq_nil; exact: equiv_refl.
 elim: l a=> /= [a Hp|b l IHl a Hp].
   by rewrite big_cons big_nil addn0 subn1 cats1; exact: equiv_refl.
-have IHp : forall p : E, p \in b :: l -> 0 < (size p).-1.
+have IHp : forall p : E, p \in b :: l -> (0 < (size p).-1)%N.
   by move=> p H; apply: Hp; rewrite mem_behead.
-have Ha: 0 < (size a).-1 by  rewrite Hp // mem_head.
-have Hb: 0 < (size b).-1 by rewrite IHp // mem_head.
+have Ha: (0 < (size a).-1)%N by  rewrite Hp // mem_head.
+have Hb: (0 < (size b).-1)%N by rewrite IHp // mem_head.
 set M := diag_mx_seq _ _ _.
 apply: (equiv_trans (equiv_drblockmx M (IHl b IHp))).
 rewrite -diag_mx_seq_cat ?size_rcons ?size_nseq //.
@@ -310,20 +310,20 @@ have Hk: k = (size_sum s2).+1.
   rewrite size_sum_big_cons /k !big_cons !big_map /= prednK //.
   congr (_ + _)%N; apply: eq_big_seq=> i Hi.
   by rewrite (@prednK (size i).-1) // IHp // mem_behead.
-have Hltk : size l < k.
+have Hltk : (size l < k)%N.
   rewrite /k (eq_big_seq (fun p : E => (size p).-2 + 1)%N).
   rewrite big_split /= addnC (big_nth 0) sum_nat_const_nat.
     by rewrite subn0 muln1 leq_addr.
   by move=> i Hi /=; rewrite addn1 prednK // IHp. 
 apply/similar_equiv/similar_diag_mx_seq=> //.    
   by rewrite !size_cat size_rcons !size_nseq subnK // Hk.
-apply/perm_eqP=> x /=.
-rewrite !count_cat /= count_rcons !count_nseq. 
-rewrite !addnA -(addnA (x a)) -mulnDl (addnC (x a)).
- rewrite /m big_cons (subnS _ (size l).+1) -{2}(prednK Ha) -addnBA //.
+apply/seq.permP=> x /=.
+rewrite -cats1 !count_cat /= !count_nseq. 
+rewrite !addnA addn0 (addnAC _ (x a)) -mulnDr; congr (_ * _ + _ + _ + _)%N.
+by rewrite /m big_cons (subnS _ (size l).+1) -{2}(prednK Ha) -addnBA //.
 Qed.
 
-Lemma Smith_companion (p : E) : 1 < size p -> p \is monic ->
+Lemma Smith_companion (p : E) : (1 < size p)%N -> p \is monic ->
   equivalent (Smith_form (char_poly_mx (companion_mx p)))
   (diag_mx_seq (size p).-2.+1 (size p).-2.+1 (rcons (nseq (size p).-2 1) p)).
 Proof.
@@ -337,7 +337,8 @@ have Hs2: (size p).-2.+1 = size (rcons (nseq (size p).-2 1) p).
 apply: eqd_equiv=> //; first by rewrite -Hs1 -Hs2.
 have := (leqnSn (size p).-2).
 rewrite -[X in (_ <= X)%N]minnn=> Hop.
-have Hsort: sorted %|%R s by apply/sorted_take/sorted_Smith.
+have Hsort: sorted %|%R s.
+  by apply/(sorted_take (@dvdr_trans _))/sorted_Smith.
 have := (equiv_Smith (char_poly_mx (companion_mx p))).
 rewrite /Smith_form -diag_mx_seq_takel=> Hsm.
 have {Hop Hsort Hsm} := (Smith_gcdr_spec Hop Hsort Hsm).
@@ -430,7 +431,7 @@ Qed.
 Lemma mxminpoly_inv_factors n (A : 'M[F]_n.+1) :
   last 0 (Frobenius_seq A) = mxminpoly A.
 Proof.
-have Hif: 0 < (size (invariant_factors A)).
+have Hif: (0 < (size (invariant_factors A)))%N.
   by rewrite lt0n size_eq0 nnil_inv_factors.
 have Hfn: [seq (size p).-2 | p : E <- invariant_factors A] != [::].
   by rewrite -size_eq0 size_map size_eq0 nnil_inv_factors.
@@ -444,10 +445,10 @@ apply: mxminpolyP=> [||q HA].
   rewrite (set_nth_default 0) ?prednK // ?Hif //.
   set p := nth _ _ _.
   apply: (@horner_mx_dvdp _ _ p).
-    apply: sorted_nth=> //.   
+    apply: sorted_leq_nth=> //.   
       -exact: dvdp_trans.
       +exact: sorted_invf.
-      -by rewrite prednK. 
+      -by rewrite inE prednK. 
     by rewrite -ltnS prednK.
   rewrite -{5}[p]comp_mxminpolyK.
       exact: mx_root_minpoly.        
@@ -483,7 +484,7 @@ Lemma similar_poly_inv (p : {poly R}) :
    let sp := linear_factor_seq p in
    let size_seq := [seq (size p).-2 | p : {poly R} <- sp] in
    let blocks n i := companion_mxn n.+1 sp`_i in 
-   1 < (size p) ->  p \is monic ->
+   (1 < (size p))%N ->  p \is monic ->
    similar (companion_mx p) (diag_block_mx size_seq blocks).
 Proof.
 move=> /= Hp1 Hmp.
@@ -505,42 +506,52 @@ have Hicp : forall i j : 'I_(size (b :: l)), i != j ->
   by move: (Hcp _ _ Hij); rewrite -!nth_behead.
 pose p2:= p1 %/ a.
 have Hma: a \is monic by apply: Hm; rewrite mem_head.
-have Hsa: 1 < size a by apply: Hs; rewrite mem_head.
+have Hsa: (1 < size a)%N by apply: Hs; rewrite mem_head.
 have Hp2: p2 = \prod_(x <- (b :: l)) x.
   by rewrite /p2 Hp1 big_cons divr_mulKr // monic_neq0.
 have Hml: forall x, x \in (b :: l) -> x \is monic.
   by move=> x Hx; apply: Hm; rewrite mem_behead.
-have Hsl: forall x, x \in b :: l -> 1 < size x.
+have Hsl: forall x, x \in b :: l -> (1 < size x)%N.
   by move=> x Hx; apply: Hs; rewrite mem_behead.
-have {Hs} Hsb: 1 < size b by apply: Hsl; rewrite mem_head.
+have {Hs} Hsb: (1 < size b)%N by apply: Hsl; rewrite mem_head.
 have {Hm} Hmb: b \is monic by apply: Hml; rewrite mem_head.
 have {Hp1} Hp12: p1 = a * p2 by rewrite Hp1 Hp2 big_cons.
 have Hmp2: p2 \is monic by rewrite -(monicMl _ Hma) -Hp12.
-have {Hsb Hmb} Hsp2: 1 < size p2.
+have sp1gt0 : (0 < size (1%:P : {poly R}))%N by rewrite size_poly1.
+have mgt0 (x y : {poly R}) :
+        (0 < size x -> 0 < size y -> 0 < size (x * y)%R)%N.
+  by move=> sx sy; rewrite size_mul -?size_poly_eq0; move: sx sy;
+        case: (size x); case: (size y) => // n1 n2; rewrite ?addnS.
+have {Hsb Hmb} Hsp2: (1 < size p2)%N.
   rewrite Hp2 big_cons size_proper_mul.
     rewrite -subn1 -addnBA ?ltn_addr //.
-    apply: size_prod_gt0=> q Hq.
-    have: 1 < size q by apply: Hsl; rewrite mem_behead.
+    rewrite big_seq.
+    apply: (big_ind (fun (p : {poly R}) => (0 < size p)%N) sp1gt0 mgt0)=> q Hq.
+    have: (1 < size q)%N by apply: Hsl; rewrite mem_behead.
     by apply: ltn_trans.
   move/monicP: Hmb => ->; rewrite mul1r lead_coef_eq0 -size_poly_leq0.
-  rewrite leqNgt size_prod_gt0 // => q Hq.
-  have: 1 < size q by apply: Hsl; rewrite mem_behead.
+  rewrite -ltnNge big_seq.
+  apply: (big_ind (fun (p : {poly R}) => (0 < size p)%N) sp1gt0 mgt0)=> q Hq.
+  have: (1 < size q)%N by apply: Hsl; rewrite mem_behead.
   by apply: ltn_trans.
+move=> {sp1gt0 mgt0}.
 apply: (@similar_trans _ _ _ _
            (block_mx (companion_mx a) 0 0 (companion_mx p2))); last first.
   by apply: (similar_drblockmx _ (IHl _ Hmp2 Hsp2 Hp2 Hsl Hml Hicp)).
 have {Hp2 Hml Hsl Hcp Hicp IHl} Hcap: coprimep a p2.
-  move/coprimepn: Hcp=> Hcp; move: (Hcp ord0); rewrite nth0.
-  have ->: (\big[*%R/1]_(j | @ord0 (size (b :: l)) != j) [:: a, b & l]`_j) =
-           (\big[*%R/1]_(x <- (b :: l)) x).
-    rewrite !(big_nth 0) big_ltn_cond; last first.
-      by rewrite /index_enum -enumT size_enum_ord.
-    rewrite -!(inj_eq (@ord_inj _)) /= /index_enum -enumT.
-    rewrite (@nth_enum_ord _ _ 0) // eqxx /= size_enum_ord big_add1.
-    apply: congr_big_nat=> // i; rewrite -!(inj_eq (@ord_inj _)).
-      by move=> Hi; rewrite (@nth_enum_ord _ _ i.+1).
-    by case/andP=> _ /andP [_ Hi3]; rewrite (@nth_enum_ord _ _ i.+1).
-  by rewrite Hp2.
+  have copa1 : coprimep a 1%P by apply: coprimep1.
+  have copaxy (x y : {poly R}) : coprimep a x -> coprimep a y ->
+                   coprimep a (x * y)%R.
+    by rewrite coprimepMr=> -> ->.
+  rewrite Hp2 big_seq.
+  apply: (big_ind (fun p => coprimep a p)).
+    + by apply: coprimep1.
+    + by move=> x y; rewrite coprimepMr => -> ->.
+   move=> i iin; move/(nth_index 0): (iin)=> iid.
+   move: (iin); rewrite -index_mem -ltnS=> ii_prf.
+   set j := Ordinal ii_prf.
+   have vi : [:: a, b & l]`_j = i by apply: (nth_index 0 iin).
+   by have := Hcp ord0 j isT; rewrite vi /=.
 apply/similar_fundamental.
 apply: (equiv_trans (equiv_Smith _)).
 apply: (equiv_trans (Smith_companion Hsp1 Hmp1)).
@@ -568,9 +579,9 @@ have Hcast: sap = (sa + sp)%N.
 have HdetM: \det M = p1.
   rewrite det_diag_mx_seq ?size_cat ?size_rcons ?size_nseq //. 
   rewrite -!cats1 !big_cat /= !big_cons !big_nil.
-  rewrite !big1_seq=> [|i|i]; try exact: mem_nseq.
+  rewrite !big1_seq=> [|i|i]; try by rewrite mem_nseq => /= /andP[] _ /eqP.
   by rewrite !mul1r !mulr1 -Hp12.
-have Ho: sa.-1 < (sa + sp).-1 by rewrite prednK // addnS leq_addr.
+have Ho: (sa.-1 < (sa + sp).-1)%N by rewrite prednK // addnS leq_addr.
 have HM1: row' (Ordinal Ho) (col' (Ordinal Ho) 
             (row' ord_max (col' ord_max  M))) = 1%:M.
   apply/matrixP=> j k; rewrite !mxE !lift_max.
@@ -579,7 +590,7 @@ have HM1: row' (Ordinal Ho) (col' (Ordinal Ho)
     rewrite ltnS leq_eqVlt eq_sym (negbTE (neq_bump _ _)) /= => Hb.     
     by rewrite Hb nth_nseq Hb eqn_leq !leq_bump2 -eqn_leq.
   move/negbT;rewrite -leqNgt=> Hb.
-  have Hb2: bump (size a).-2 j - (size a).-2.+1 < (size p2).-2.
+  have Hb2: (bump (size a).-2 j - (size a).-2.+1 < (size p2).-2)%N.
     rewrite -(ltn_add2r sa _ _.-2) subnK //.
     by rewrite (leq_trans (ltn_ord (lift (Ordinal Ho) j))) // addnC addSn. 
   by rewrite Hb2 nth_nseq Hb2 eqn_leq !leq_bump2 -eqn_leq. 
@@ -588,11 +599,13 @@ rewrite /Smith_form -diag_mx_seq_takel.
 set s := take _ _.
 have Hs1: size s = sap by rewrite Hcast size_Smith_seq // HdetM monic_neq0.
 apply: eqd_equiv=> // [|i]; first by rewrite size_rcons size_nseq.
-have Hle: sap.-2 <= sa + sp by rewrite -Hcast -subn2 leq_subr.
-have Hsort: sorted (@dvdr _) s by apply/sorted_take/sorted_Smith.
+have Hle: (sap.-2 <= sa + sp)%N by rewrite -Hcast -subn2 leq_subr.
+have Hsort: sorted (@dvdr _) s.
+  by apply/(sorted_take (@dvdr_trans _))/sorted_Smith.
 have:= (equiv_Smith M).
 rewrite /Smith_form -diag_mx_seq_takel=> Hequiv.
-have Hle2: sap.-2 < minn (sa + sp) (sa + sp) by rewrite minnn Hcast addnS addSn.
+have Hle2: (sap.-2 < minn (sa + sp) (sa + sp))%N
+   by rewrite minnn Hcast addnS addSn.
 have:= Smith_gcdr_spec Hle2 Hsort Hequiv.
 set d2 := \big[_/_]_(_<_) _=> H2.
 have {H2} H2: d2 %= 1.
@@ -614,13 +627,13 @@ have {H2} H2: d2 %= 1.
    by rewrite det1 mulr1.
    move=> j /negbTE Hj; rewrite !mxE !ffunE.
    by rewrite (inj_eq (@ord_inj _)) (inj_eq (@lift_inj _ _)) eq_sym Hj mul0r.
-  have Ho2: sa .-1 < sa + sp by rewrite prednK // leq_addr.    
+  have Ho2: (sa .-1 < sa + sp)%N by rewrite prednK // leq_addr.    
   apply: big_gcdr_def; rewrite Hcast prednK ?addnS ?addSn //.
   exists [ffun x => lift (Ordinal Ho2) x].
   apply: big_gcdr_def.
   exists [ffun x => lift (Ordinal Ho2) x].
   rewrite /minor.minor /minor.submatrix /=.
-  have Hom: (size a).-2 + (size p2).-2 < (size a).-2 + sp by rewrite addnS. 
+  have Hom: ((size a).-2 + (size p2).-2 < (size a).-2 + sp)%N by rewrite addnS. 
   have Hlom k : lift (Ordinal Hom) k = widen_ord (leq_pred _) k.
     apply: ord_inj=> /=; rewrite /bump leqNgt.
     by rewrite (leq_trans (ltn_ord k)) // addnS leqnn.   
@@ -647,7 +660,7 @@ have Hsp: s`_sap.-1 %= p1.
   by rewrite Hs1 Hcast.
 move/eqd_big_mul1: H2=> H.
 have [Hi|Hi|/eqP Hi] := (ltngtP i sap.-1).
-  +have Hi2: i < sap.-2.+1 by rewrite prednK // Hcast addnS addSn.
+  +have Hi2: (i < sap.-2.+1)%N by rewrite prednK // Hcast addnS addSn.
    rewrite nth_rcons size_nseq Hi nth_nseq Hi.
    exact: (H (Ordinal Hi2)).
   by rewrite !nth_default // ?Hs1 // size_rcons size_nseq. 
@@ -668,25 +681,27 @@ Lemma similar_Frobenius n (A : 'M[R]_n.+1) :
 Proof.
 rewrite /Frobenius_form /Frobenius_form_CF.
 have := (@monic_invariant_factors _ _ A).
-have: forall p, p \in (invariant_factors A) -> 1 < size p.
+have: forall p, p \in (invariant_factors A) -> (1 < size p)%N.
   by move=> p; rewrite mem_filter; case/andP.
 case: (invariant_factors A)=>[_ _|a l]; first exact: similar_refl.
 elim: l a=> /= [a Hsa Hma |b l IHl a Hs Hm].
   rewrite !cats0; apply: similar_poly_inv.
     by rewrite Hsa // mem_head.
   by rewrite Hma // mem_head.
-have IHs: forall p : {poly R}, p \in b :: l -> 1 < size p. 
+have IHs: forall p : {poly R}, p \in b :: l -> (1 < size p)%N.
   by move=> p Hp; apply: Hs; rewrite mem_behead.
 have IHm: forall p : {poly R}, p \in b :: l -> p \is monic.
   by move=> p HP; apply: Hm; rewrite mem_behead. 
-have Hsa: 1 < size a by rewrite Hs // mem_head.
+have Hsa: (1 < size a)%N by rewrite Hs // mem_head.
 have Hma: a \is monic by rewrite Hm // mem_head.
 set M := companion_mxn _ _.
 apply: (similar_trans (similar_drblockmx M (IHl b IHs IHm))).
 apply: (similar_trans (similar_ulblockmx _ (similar_poly_inv Hsa Hma))). 
 have Hnv: forall p, p \in [:: a, b & l] -> linear_factor_seq p != [::].
   move=> p Hp; rewrite /linear_factor_seq -size_eq0 !size_map size_eq0.
-  by rewrite undup_nil -root_seq_nil -ltnNge Hs.
+  rewrite /root_seq_uniq.
+  apply/negP=> /eqP/undup_nil/eqP; apply/negP; rewrite -root_seq_nil.
+  by rewrite -ltnNge Hs.
 set s1 := _ ++ _.
 set s2 := linear_factor_seq _ ++ _.
 have: (linear_factor_seq a) != [::] by rewrite Hnv // mem_head.
@@ -695,7 +710,7 @@ have t: s2 != [::].
   by rewrite /s2; case: (linear_factor_seq b).
 clear -t.
 have ->: s1 = [seq (size p).-2 | p : {poly R} <- s2].
-  by rewrite /s1 map_cat flatten_map -[X in _ = _ ++ flatten X]map_comp.
+  by rewrite /s1 map_cat map_flatten; congr (_ ++ _); rewrite [in LHS]map_comp.
 case: (linear_factor_seq a)=> //= c s _.
 elim: s c=> [c|c s IHs d] /=.
   case: s2 t => // d s2 _ /=.
