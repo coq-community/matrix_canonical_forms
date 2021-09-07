@@ -1,0 +1,13 @@
+-R theories matrix_canonical_forms
+
+-arg -w -arg -notation-overridden
+-arg -w -arg -ambiguous-paths
+-arg -w -arg -duplicate-clear
+
+theories/perm_eq_image.v
+theories/jordan.v
+theories/frobenius_form.v
+theories/smith_complements.v
+theories/similar.v
+theories/companion.v
+theories/closed_poly.v
