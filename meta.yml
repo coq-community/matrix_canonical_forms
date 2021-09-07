@@ -5,6 +5,7 @@ opam_name: coq-matrix-canonical-forms
 organization: coq-community
 community: true
 action: true
+branch: main
 
 synopsis: Various kinds of normal forms for matrices in Coq using Mathematical Components
 
