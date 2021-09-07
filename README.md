@@ -36,9 +36,9 @@ normal forms, etc., converging towards a proof of the Perron-Frobenius theorem.
 - License: [MIT License](LICENSE)
 - Compatible Coq versions: 8.10 or later
 - Additional dependencies:
-  - [MathComp ssreflect](https://math-comp.github.io) 1.12
-  - [MathComp fingroup](https://math-comp.github.io) 1.12
-  - [MathComp algebra](https://math-comp.github.io) 1.12
+  - [MathComp ssreflect](https://math-comp.github.io) 1.12 or later
+  - [MathComp fingroup](https://math-comp.github.io)
+  - [MathComp algebra](https://math-comp.github.io)
   - [MathComp real-closed](https://math-comp.github.io) 1.1.2 or later
   - [CoqEAL](https://github.com/coq-community/coqeal) 1.0.5 or later
 - Coq namespace: `matrix_canonical_forms`
@@ -52,7 +52,7 @@ To build and install, do:
 ``` shell
 git clone https://github.com/coq-community/matrix_canonical_forms.git
 cd matrix_canonical_forms
-make   # or make -j <number-of-cores-on-your-machine> 
+make   # or make -j <number-of-cores-on-your-machine>
 make install
 ```
 

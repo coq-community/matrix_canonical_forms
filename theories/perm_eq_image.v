@@ -42,8 +42,8 @@ Lemma perm_eq_image :  {subset (image f P) <= (image g P)} ->
   perm_eq (image f P) (image g P).
 Proof.
 move=> imfsubimg.
-rewrite uniq_perm_eq // ?uniq_image //.
-have []:= (leq_size_perm (uniq_image Hf) imfsubimg)=> //.
+rewrite uniq_perm // ?uniq_image //.
+have []:= (uniq_min_size (uniq_image Hf) imfsubimg)=> //.
 by rewrite !size_map.
 Qed.
 

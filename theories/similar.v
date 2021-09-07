@@ -79,7 +79,7 @@ have Hs2: size s2 == n by  rewrite -Hs12 Hms eq.
 pose t:= Tuple Hs2.
 have HE: s2 = t by [].
 move: Hp; rewrite HE.
-case/tuple_perm_eqP=> p Hp.
+case/tuple_permP=> p Hp.
 split=> //; rewrite eq.
 exists (perm_mx p)^T; split; first by rewrite unitmx_tr unitmx_perm.
 apply/matrixP=> i j; rewrite conform_mx_id !mxE (bigD1 j) //= big1 ?addr0.
