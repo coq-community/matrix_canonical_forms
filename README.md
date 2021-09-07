@@ -43,19 +43,11 @@ normal forms, etc., converging towards a proof of the Perron-Frobenius theorem.
   - [CoqEAL](https://github.com/coq-community/coqeal) 1.0.5 or later
 - Coq namespace: `matrix_canonical_forms`
 - Related publication(s):
-  - [https://tel.archives-ouvertes.fr/tel-00986283/](Interaction entre algèbre linéaire et analyse en formalisation des mathématiques) 
+  - [Interaction entre algèbre linéaire et analyse en formalisation des mathématiques](https://tel.archives-ouvertes.fr/tel-00986283/) 
 
 ## Building and installation instructions
 
-The easiest way to install the latest released version of Matrix Canonical Forms
-is via [OPAM](https://opam.ocaml.org/doc/Install.html):
-
-```shell
-opam repo add coq-released https://coq.inria.fr/opam/released
-opam install coq-matrix-canonical-forms
-```
-
-To instead build and install manually, do:
+To build and install, do:
 
 ``` shell
 git clone https://github.com/coq-community/matrix_canonical_forms.git
@@ -63,7 +55,6 @@ cd matrix_canonical_forms
 make   # or make -j <number-of-cores-on-your-machine> 
 make install
 ```
-
 
 ## Documentation
 
