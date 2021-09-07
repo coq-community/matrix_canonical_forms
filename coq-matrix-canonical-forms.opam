@@ -19,12 +19,12 @@ normal forms, etc., converging towards a proof of the Perron-Frobenius theorem."
 build: [make "-j%{jobs}%" ]
 install: [make "install"]
 depends: [
-  "coq" {(>= "8.10" & < "8.15~") | (= "dev")}
-  "coq-mathcomp-ssreflect" {(>= "1.12.0" & < "1.13~") | (= "dev")}
-  "coq-mathcomp-fingroup" {(>= "1.12.0" & < "1.13~") | (= "dev")}
-  "coq-mathcomp-algebra" {(>= "1.12.0" & < "1.13~") | (= "dev")}
-  "coq-mathcomp-real-closed" {(>= "1.1.2" & < "1.2~") | (= "dev")}
-  "coq-coqeal" {(>= "1.0.5" & < "1.1~") | (= "dev")}
+  "coq" {>= "8.10" & < "8.15~"}
+  "coq-mathcomp-ssreflect" {>= "1.12.0" & < "1.13~"}
+  "coq-mathcomp-fingroup" {>= "1.12.0" & < "1.13~"}
+  "coq-mathcomp-algebra" {>= "1.12.0" & < "1.13~"}
+  "coq-mathcomp-real-closed" {>= "1.1.2" & < "1.2~"}
+  "coq-coqeal" {>= "1.0.5" & < "1.1~"}
 ]
 
 tags: [
