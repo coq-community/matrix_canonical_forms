@@ -190,7 +190,7 @@ have Hst: sorted (@dvdpm F) (nseq m 1 ++ invariant_factors A).
     by rewrite sorted_filter //;first exact: dvdpm_trans.
   rewrite -nth_last nth_nseq size_nseq.
   by case: (m.-1 < m)%N; rewrite dvd1pm //; apply: (monic_invariant_factors Hp).
-apply: (eq_sorted (@dvdpm_trans F) (@dvdpm_asym F) Hfrob Hst).
+apply: (sorted_eq (@dvdpm_trans F) (@dvdpm_asym F) Hfrob Hst).
 pose a:= fun p : E => (size p <= 1)%N.
 have HaC: {in (Frobenius_seq A), (fun p : E => (1 < size p)%N) =1 (predC a)}.
   by move=> p /=; rewrite -ltnNge.
@@ -639,7 +639,7 @@ have {H2} H2: d2 %= 1.
     by rewrite (leq_trans (ltn_ord k)) // addnS leqnn.   
   rewrite (expand_det_row _ (Ordinal Hom)).
   rewrite (bigD1 (Ordinal Hom)) //= big1 ?addr0.
-    rewrite !mxE !ffunE /= -[X in bump X _]addn0 bump_addl /bump leq0n /=.
+    rewrite !mxE !ffunE /= -[X in bump X _]addn0 bumpDl /bump leq0n /=.
     rewrite nth_cat size_rcons size_nseq ltnS add1n {1}addnS.
     rewrite ltnNge leq_addr /= nth_rcons size_nseq.
     rewrite {1 3}addnS !subSS !addKn !ltnn !eqxx.

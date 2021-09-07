@@ -43,7 +43,7 @@ case: (ltnP 1 (size p))=> Hpt; last first.
   rewrite /companion_mx !Hcst1 Hp1 mul1r /char_poly size_polyC oner_eq0. 
   set M := char_poly_mx _.  
   rewrite [M]mx11_scalar det_scalar1 !mxE coefD coefC coefX.
-  by rewrite !add0r polyC_opp opprK size_XaddC.  
+  by rewrite !add0r polyCN opprK size_XaddC.  
 rewrite /char_poly /companion_mx Hcst1.
 rewrite (expand_det_row _ ord0) big_ord_recl !mxE.
 rewrite mulr1n !mulr0n add0r /cofactor !addn0 expr0 mul1r.
@@ -53,22 +53,22 @@ rewrite big_ord_recr big1; last first.
    move=> i _; rewrite !mxE !sub0r size_MXaddC (negbTE H) andFb. 
    have:= (neq_ltn n (widen_ord (leqnSn n) i)).
    rewrite Hnp (ltn_ord i) orbT lift0 eqSS.
-   by move/negbTE ->; rewrite polyC_opp opprK mul0r.
+   by move/negbTE ->; rewrite polyCN opprK mul0r.
 rewrite /= add0r; set M := row' _ _.
 have HM: upper_triangular_mx M.
   apply/upper_triangular_mxP=> i j Hij.
   rewrite !mxE -(inj_eq (@ord_inj _)) /= /bump !leq0n leqNgt (ltn_ord j).
   rewrite add1n eqn_leq leqNgt ltnS ltnW // sub0r eqSS eqn_leq leqNgt Hij.
   rewrite sub0r eqn_leq size_MXaddC (negbTE H) andFb Hnp.
-  by rewrite  (leqNgt n.+1) (ltn_ord j) polyC_opp opprK.
+  by rewrite  (leqNgt n.+1) (ltn_ord j) polyCN opprK.
 have->: \det M = (-1)^+n.+1.
   rewrite (det_triangular_mx HM) -{7}[n.+1]card_ord -prodr_const.
   apply: eq_bigr=> i _; rewrite !mxE -(inj_eq (@ord_inj _)) !lift0 !lift_max.
   rewrite eqxx !eqn_leq ltnn size_MXaddC (negbTE H) andFb Hnp. 
   by rewrite (leqNgt _ i) (ltn_ord i) sub0r subr0.
-rewrite !mxE -exprD -signr_odd addnn odd_double mulr1 polyC_opp opprK.
+rewrite !mxE -exprD -signr_odd addnn odd_double mulr1 polyCN opprK.
 rewrite size_MXaddC (negbTE H) andFb Hnp addr0 !sub0r.
-rewrite -{1}cons_poly_def coef_cons polyC_opp opprK !eqxx -(IHp Hmp Hpt) mulrC.
+rewrite -{1}cons_poly_def coef_cons polyCN opprK !eqxx -(IHp Hmp Hpt) mulrC.
 suff ->: d1 = char_poly (companion_mx p)=> //.
 rewrite /companion_mx.
 have ->: (size p).-2.+1 = (size p).-1.+1.-1.+1.-1 by rewrite Hnp.
