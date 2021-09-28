@@ -1,0 +1,4 @@
+(coq.theory
+ (name matrix_canonical_forms)
+ (package coq-matrix-canonical-forms)
+ (synopsis "Various kinds of normal forms for matrices in Coq using Mathematical Components"))
