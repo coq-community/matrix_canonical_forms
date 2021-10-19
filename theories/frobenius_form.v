@@ -343,7 +343,7 @@ have := (equiv_Smith (char_poly_mx (companion_mx p))).
 rewrite /Smith_form -diag_mx_seq_takel=> Hsm.
 have {Hop Hsort Hsm} := (Smith_gcdr_spec Hop Hsort Hsm).
 set d := \big[_/_]_(_<_) _=> H.
-have {H} H: d %= 1.
+have {H} Hd1: d %= 1.
   apply/(eqd_trans H)/andP; split; last by rewrite dvd1r.
   apply: big_gcdr_def; exists ([ffun x => (lift ord0 x)]).
   apply: big_gcdr_def; exists ([ffun x => (lift ord_max x)]).
@@ -360,13 +360,13 @@ have {H} H: d %= 1.
     by rewrite eqxx !eqn_leq ltnn (leqNgt _ i) ltn_ord sub0r subr0.
   by apply/dvdrP; exists ((-1)^+ (size p).-2); rewrite -expr2 sqrr_sign.
 have Hip: s`_(size p).-2 %= p.
-  rewrite eqd_sym in H.
-  rewrite -(mul1r s`_(size p).-2) (eqd_ltrans (eqd_mulr _ H)).
+  rewrite eqd_sym in Hd1.
+  rewrite -(mul1r s`_(size p).-2) (eqd_ltrans (eqd_mulr _ Hd1)).
    rewrite -{2}(comp_char_polyK Hmp Hsp) /char_poly -det_Smith.
   rewrite /Smith_form -diag_mx_seq_takel.
   rewrite det_diag_mx_seq // eqd_sym (big_nth 0) big_mkord.
-  by rewrite -Hs1 big_ord_recr /=. 
-move/eqd_big_mul1: H => H i.
+  by rewrite -Hs1 big_ord_recr /=.
+move/eqd_big_mul1: Hd1 => H i.
 have [Hi|Hi|/eqP Hi] := (ltngtP i (size p).-2).
     by rewrite nth_rcons size_nseq Hi nth_nseq Hi (H (Ordinal Hi)).
   by rewrite !nth_default // -?Hs1 // size_rcons size_nseq.
@@ -608,7 +608,7 @@ have Hle2: (sap.-2 < minn (sa + sp) (sa + sp))%N
    by rewrite minnn Hcast addnS addSn.
 have:= Smith_gcdr_spec Hle2 Hsort Hequiv.
 set d2 := \big[_/_]_(_<_) _=> H2.
-have {H2} H2: d2 %= 1.
+have {H2} Hd2: d2 %= 1.
   apply/(eqd_trans H2); rewrite /eqd !dvdr_dvdp.
   apply: (coprimepP _ _ Hcap); rewrite -dvdr_dvdp.
   +apply: big_gcdr_def; rewrite Hcast prednK ?addnS ?addSn //.
@@ -652,13 +652,13 @@ have {H2} H2: d2 %= 1.
   move=> j /negbTE Hj; rewrite !mxE !ffunE (inj_eq (@ord_inj _)).
   by rewrite (inj_eq (@lift_inj _ _)) eq_sym Hj mul0r.
 have Hsp: s`_sap.-1 %= p1.
-  rewrite eqd_sym in H2.
-  rewrite -(mul1r s`_sap.-1) (eqd_ltrans (eqd_mulr _ H2)).
+  rewrite eqd_sym in Hd2.
+  rewrite -(mul1r s`_sap.-1) (eqd_ltrans (eqd_mulr _ Hd2)).
   rewrite -HdetM -det_Smith /Smith_form -diag_mx_seq_takel det_diag_mx_seq.
     rewrite (big_nth 0) big_mkord Hs1 big_ord_recr /=.
     by apply: eqd_mul=> //; rewrite /d2 prednK // Hcast addnS addSn. 
   by rewrite Hs1 Hcast.
-move/eqd_big_mul1: H2=> H.
+move/eqd_big_mul1: Hd2=> H.
 have [Hi|Hi|/eqP Hi] := (ltngtP i sap.-1).
   +have Hi2: (i < sap.-2.+1)%N by rewrite prednK // Hcast addnS addSn.
    rewrite nth_rcons size_nseq Hi nth_nseq Hi.

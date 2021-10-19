@@ -148,7 +148,7 @@ rewrite /Smith_form -diag_mx_seq_takel => Hequiv.
 have Hlemin: (n <= minn n.+1 n.+1)%N by rewrite minnn.
 have:= Smith_gcdr_spec Hlemin Hsort Hequiv.
 set d := \big[_/_]_(_<_) _=> H.
-have {H} H: d %= 1.
+have {H} Hd1: d %= 1.
   apply/(eqd_trans H)/andP; split; last by rewrite dvd1r.
   apply: big_gcdr_def; exists [ffun x => (lift ord_max x)].
   apply: big_gcdr_def; exists [ffun x => (lift ord0 x)].
@@ -165,12 +165,12 @@ have {H} H: d %= 1.
     by rewrite eqxx !eqn_leq ltnn andbF sub0r add0r.
   by apply/dvdrP; exists ((-1)^+ n); rewrite -expr2 sqrr_sign.
 have Hip: s`_n %= p.
-  rewrite eqd_sym in H.
-  rewrite -(mul1r s`_n) (eqd_ltrans (eqd_mulr _ H)).
+  rewrite eqd_sym in Hd1.
+  rewrite -(mul1r s`_n) (eqd_ltrans (eqd_mulr _ Hd1)).
   rewrite /p -char_poly_Jordan_block /char_poly -det_Smith.
   rewrite /Smith_form -diag_mx_seq_takel det_diag_mx_seq //. 
   by rewrite (big_nth 0) big_mkord Hs1 big_ord_recr.
-move/eqd_big_mul1: H => H i.
+move/eqd_big_mul1: Hd1 => H i.
 have [Hi|Hi|/eqP Hi] := (ltngtP i n).
     by rewrite nth_rcons size_nseq Hi nth_nseq Hi (H (Ordinal Hi)).
   by rewrite !nth_default // ?Hs1 // size_rcons size_nseq.

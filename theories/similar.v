@@ -359,7 +359,7 @@ pose N0 := rmodp (phi N) ('X - B%:P).
 pose M1 := rdivp_l (phi M) ('X - B%:P).
 pose N1 := rdivp (phi N) ('X - B%:P).
 pose R1 := M1 * phi M^-1 + phi N^-1 * N1 - M1 * ('X - A%:P) * N1.
-have {H}H: M0 * ('X - A%:P) * N0 = (1 - ('X - B%:P) * R1) * ('X - B%:P).
+have {H} HAB: M0 * ('X - A%:P) * N0 = (1 - ('X - B%:P) * R1) * ('X - B%:P).
   have HM1: ('X - B%:P) * M1 = phi M - M0.
     by rewrite [phi M](rdivp_l_eq (monicXsubC B)) addrK.
   have HN1: N1 * ('X - B%:P) = phi N - N0.
@@ -379,7 +379,7 @@ have HN0 : (size N0 <= 1)%N.
   by rewrite -ltnS -(size_XsubC B) ltn_rmodp polyXsubC_eq0.
 case HR1:(R1 == 0); last first.
   have: (size ((1 - ('X - B%:P) * R1) * ('X - B%:P))%R <= 2)%N.
-    rewrite -H; apply:(leq_trans (size_mul_leq _ _)).
+    rewrite -HAB; apply:(leq_trans (size_mul_leq _ _)).
     rewrite (size1_polyC HN0) size_polyC -subn1 leq_subLR addnC.
     apply/(leq_add (leq_b1 _))/(leq_trans (size_mul_leq _ _)).
     by rewrite (size1_polyC HM0) size_polyC size_XsubC addnC; exact:leq_b1.
@@ -392,7 +392,7 @@ case HR1:(R1 == 0); last first.
   + by rewrite Hsize size_XsubC addnC !ltnS leqn0 size_poly_eq0 HR1.
   + by rewrite -size_poly_eq0 Hsize.
   exact:monicXsubC.
-move:H; rewrite (eqP HR1) mulr0 subr0 mul1r (size1_polyC HM0).
+move:HAB; rewrite (eqP HR1) mulr0 subr0 mul1r (size1_polyC HM0).
 rewrite (size1_polyC HN0)=> /polyP H; move:(H 1%N); move:(H 0%N).
 rewrite !coefMC !coefCM !coefD !coefN !coefC !coefX !eqxx !sub0r subr0 mulr1.
 rewrite mulrN mulNr; move/eqP; rewrite eqr_opp=> /eqP HM0N0 HM0N0I.
